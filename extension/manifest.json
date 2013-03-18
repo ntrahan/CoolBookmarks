@@ -1,7 +1,7 @@
 {
-	"name": "Cool bookmarks",
+	"name": "Cool Bookmarks",
 	"description": "A cool little bookmark manager for Chrome",
-	"version": "0.6",
+	"version": "0.6.2",
 	"manifest_version": 2,
 	"icons": {
 		"16": "media/icon16.png",
@@ -13,7 +13,7 @@
 	},
 	"browser_action": {
 		"default_icon": "media/icon16.png",
-		"default_title": "Bookmarks Popup",
+		"default_title": "Cool Bookmarks",
 		"default_popup": "code/popup.html"
 	},
 	"___page_action": {
