@@ -7,16 +7,47 @@ var mode = 'regular';
 var targetId; // holds the id of the bookmarks node that was right-clicked on
 var targetIsFolder; // true is the node that was right-clicked on is a folder
 	// otherwise it's a bookmark
+var editingId; // if the mode is 'title', this holds the id of the node
+	// currently being edited
 
-// Return the DOM element that contains the title
-// for the BookmarkTreeNode that has the id
-// "targetId".
-function titleContainer() {
-	if (targetIsFolder) {
-		return $('folderTitle_' + targetId)[0];
-	} else {
-		return $('#node_' + targetId + ' .linkText')[0];
-	}
+// Get the title of the bookmark node with the given id
+// (get it from the DOM for speed)
+function getTitle(id) {
+	return $('#node_' + id + ' .title')[0].innerHTML;
+}
+
+// Set the title for the bookmark node with the given id,
+// both on the UI and in the backend.
+function setTitle(id, newTitle) {
+	$('#node_' + id + ' .title')[0].innerHTML = newTitle;
+	chrome.bookmarks.update(id, {title: newTitle});
+}
+
+function startEditingTitle(id) {
+	$('.node').removeClass('selected');
+
+	var linkText = $('#node_' + id + ' .title');
+
+	linkText.hide();
+	$('#menu').hide();
+	$('#inputEdit')[0].value = getTitle(id);
+
+	// add input box to edit the title
+	linkText.before($('#inputEdit'));
+	$('#inputEdit').show();
+	$('#inputEdit')[0].select();
+	$('#inputEdit')[0].focus();
+
+	mode = 'title';
+}
+
+function finishEditingTitle(id) {
+	var newTitle = $('#inputEdit')[0].value;
+	setTitle(id, newTitle);
+
+	$('#inputEdit').hide();
+	$('#node_' + id + ' .title').show();
+	//chrome.bookmarks.update(targetId, {title: newTitle});
 }
 
 // Assuming a string has the format "[a-zA-Z]*_(.*)",
@@ -50,7 +81,7 @@ function nodeDiv1(bookmarkNode) {
 		var folderImg = visible ? 'folder_opened.gif' : 'folder_closed.gif';
 		
 		nodeHtml += '<div id="node_' + bookmarkNode.id + '" class="folder">';
-		nodeHtml += '<div id="folderTitle_' + bookmarkNode.id + '" class="folderTitle node"><img class="icon" src="../media/' + folderImg + '" />' + bookmarkNode.title + '</div>';
+		nodeHtml += '<div id="folderTitle_' + bookmarkNode.id + '" class="folderTitle node"><img class="icon" src="../media/' + folderImg + '" /><span class="title">' + bookmarkNode.title + '</span></div>';
 		nodeHtml += '<div id="folderContents_' + bookmarkNode.id + '" class="folderContents ' + extraClass + '">';
 		for (i in bookmarkNode.children) {
 			nodeDiv1(bookmarkNode.children[i]);
@@ -58,7 +89,7 @@ function nodeDiv1(bookmarkNode) {
 		nodeHtml += '</div></div>';
 	} else { // then the node is a bookmark
 		var favicon = 'chrome://favicon/' + escapeHtml(bookmarkNode.url);
-		nodeHtml += '<div id="node_' + bookmarkNode.id + '" class="bookmark node"><img class="icon" src="' + favicon + '" width="16" height="16" /><a class="linkText" href="' + bookmarkNode.url + '">' + bookmarkNode.title + '</a></div>';
+		nodeHtml += '<div id="node_' + bookmarkNode.id + '" class="bookmark node"><img class="icon" src="' + favicon + '" width="16" height="16" /><a class="linkText" href="' + bookmarkNode.url + '"><span class="title">' + bookmarkNode.title + '</span></a></div>';
 	}
 }
 
@@ -125,6 +156,7 @@ $(function() {
 		// action when clicking on a link
 		$('a').on('click', function(e) {
 			if (e.which != 1) { return; }
+			if (mode != 'regular') { return; }
 			href = e.currentTarget.href;
 
 			chrome.tabs.getSelected(null, function(tab) {
@@ -137,6 +169,8 @@ $(function() {
 		
 		// hide or show folders on click
 		$('div.mainContainer').on('click', 'div.folderTitle', function(e) {
+			if (mode != 'regular') { return; }
+
 			var folderContents = $(e.currentTarget).next()[0];
 			$(folderContents).toggle();
 			var folderIsVisible = (folderContents.style.display != 'none');
@@ -224,23 +258,8 @@ $(function() {
 
 		// action on "edit title"
 		$('#menu_edit_title').on('click', function(e) {
-			$('.node').removeClass('selected');
-
-			var link = $('#node_' + targetId + ' .linkText');
-
-			link.hide();
-			$('#menu').hide();
-
-			// find the current title of this bookmark node
-			$('#inputEdit')[0].value = titleContainer().innerHTML;
-
-			// add input box to edit the title
-			link.before($('#inputEdit'));
-			$('#inputEdit').show();
-			$('#inputEdit')[0].select();
-			$('#inputEdit')[0].focus();
-
-			mode = 'title';
+			editingId = targetId;
+			startEditingTitle(editingId);
 			return false;
 		});
 
@@ -248,16 +267,13 @@ $(function() {
 			if (e.type == 'keyup' && e.keyCode != 13) { // (key 13 is 'enter')
 				return false;
 			}
-			
+
 			if (mode == 'contextMenu') {
 				closeContextMenu();
 				mode = 'regular';
 			} else if (mode == 'title') {
-				var newTitle = $('#inputEdit')[0].value;
-				titleContainer().innerHTML = newTitle;
-				$('#inputEdit').hide();
-				$('#node_' + targetId + ' .linkText').show();
-				chrome.bookmarks.update(targetId, {title: newTitle});
+				finishEditingTitle(editingId);
+				mode = 'regular';
 			}
 		});
 		
