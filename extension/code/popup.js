@@ -47,7 +47,6 @@ function finishEditingTitle(id) {
 
 	$('#inputEdit').hide();
 	$('#node_' + id + ' .title').show();
-	//chrome.bookmarks.update(targetId, {title: newTitle});
 }
 
 // Assuming a string has the format "[a-zA-Z]*_(.*)",
@@ -89,7 +88,12 @@ function nodeDiv1(bookmarkNode) {
 		nodeHtml += '</div></div>';
 	} else { // then the node is a bookmark
 		var favicon = 'chrome://favicon/' + escapeHtml(bookmarkNode.url);
-		nodeHtml += '<div id="node_' + bookmarkNode.id + '" class="bookmark node"><img class="icon" src="' + favicon + '" width="16" height="16" /><a class="linkText" href="' + bookmarkNode.url + '"><span class="title">' + bookmarkNode.title + '</span></a></div>';
+		var lastVisitedClass = '';
+		if (localStorage['lastVisited'] == bookmarkNode.id) {
+			lastVisitedClass = ' lastVisited';
+		}
+
+		nodeHtml += '<div id="node_' + bookmarkNode.id + '" class="bookmark node"><img class="icon" src="' + favicon + '" width="16" height="16" /><a class="linkText' + lastVisitedClass + '" href="' + bookmarkNode.url + '"><span class="title">' + bookmarkNode.title + '</span></a></div>';
 	}
 }
 
@@ -154,10 +158,18 @@ $(function() {
 		});
 
 		// action when clicking on a link
-		$('a').on('click', function(e) {
+		$('div.mainContainer').on('click', 'a', function(e) {
 			if (e.which != 1) { return; }
 			if (mode != 'regular') { return; }
 			href = e.currentTarget.href;
+			node = ($(this).parent())[0];
+			localStorage['lastVisited'] = getIdNum(node.id);
+
+			// highlight the node, remove highlight from all other nodes
+			/*$('a.linkText').each(function(i) {
+				$(this).removeClass('lastVisited');
+			});
+			$(this).addClass('lastVisited');*/
 
 			chrome.tabs.getSelected(null, function(tab) {
 				chrome.tabs.update(tab.id, {url: href});
