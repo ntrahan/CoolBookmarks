@@ -1,4 +1,4 @@
 CoolBookmarks
 =============
 
-A cool little bookmark manager for Chrome
+A cool simple bookmark manager for Chrome
