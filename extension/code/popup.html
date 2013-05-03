@@ -18,9 +18,9 @@
 			}
 
 			div.bookmark {
-				white-space: nowrap;
+				/*white-space: nowrap;
 				overflow: hidden;
-				text-overflow: ellipsis;
+				text-overflow: ellipsis;*/
 			}
 
 			img.icon {
@@ -69,7 +69,7 @@
 				/*border: 2px blue solid;*/
 			}
 
-			div.selected a.linkText {
+			div.selected a.link {
 				color: white;
 				border-bottom: 0;
 			}
@@ -109,8 +109,12 @@
 				border-bottom: 1px black solid;
 			}
 
-			a.linkText:hover {
+			a.link:hover {
 				border-bottom: 1px black solid;
+			}
+
+			a.link {
+				text-overflow: ellipsis;
 			}
 
 			.lastVisited {
