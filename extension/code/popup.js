@@ -10,6 +10,10 @@ var targetIsFolder; // true is the node that was right-clicked on is a folder
 var editingId; // if the mode is 'title', this holds the id of the node
 	// currently being edited
 
+function nodeIsFolder(id) {
+	return $('#node_' + id).hasClass('folder')
+}
+	
 // Get the title of the bookmark node with the given id
 // (get it from the DOM for speed)
 function getTitle(id) {
@@ -24,6 +28,21 @@ function setTitle(id, newTitle) {
 }
 
 function startEditingTitle(id) {
+	node = $('#node_' + id)
+	titleSpan = $(node.find('.title')[0])
+	titleSpan.hide();
+	
+	// add input box to edit the title
+	editBox = $('#inputEdit')[0]
+	editBox.value = getTitle(id);
+	titleSpan.before($(editBox));
+	$(editBox).show();
+	editBox.select();
+	editBox.focus();
+	
+	mode = 'title'
+	
+	/*
 	$('.node').removeClass('selected');
 
 	var link = $('#node_' + id + ' .link');
@@ -39,6 +58,7 @@ function startEditingTitle(id) {
 	$('#inputEdit')[0].focus();
 
 	mode = 'title';
+	*/
 }
 
 function finishEditingTitle(id) {
@@ -46,7 +66,7 @@ function finishEditingTitle(id) {
 	setTitle(id, newTitle);
 
 	$('#inputEdit').hide();
-	$('#node_' + id + ' .link').show();
+	$('#node_' + id + ' .title').show();
 }
 
 // Assuming a string has the format "[a-zA-Z]*_(.*)",
@@ -71,6 +91,24 @@ function nodeDiv(bookmarkNode) {
 	nodeDiv1(bookmarkNode);
 
 	return nodeHtml;
+}
+
+function toggleOpenFolder(id) {
+	var folderContents = $('#node_' + id).children()[1]
+	$(folderContents).toggle();
+	var folderIsVisible = (folderContents.style.display != 'none');
+	var index = 'node_' + id;
+	
+	localStorage[index] = folderIsVisible;
+	
+	image = $('#node_' + id).find('img')[0]
+	if (!folderIsVisible) {
+		$(folderContents).sortable('destroy');
+		image.src = "../media/folder_closed.gif";
+	} else {
+		makeSortable($(folderContents));
+		image.src = "../media/folder_opened.gif";
+	}
 }
 
 function nodeDiv1(bookmarkNode) {
@@ -162,7 +200,6 @@ $(function() {
 		$('div.mainContainer').on('click', 'a', function(e) {
 			if (e.which != 1) { return; }
 
-
 			if (mode != 'regular') { return; }
 			href = e.currentTarget.href;
 			node = ($(this).parent())[0];
@@ -184,21 +221,8 @@ $(function() {
 		
 		// hide or show folders on click
 		$('div.mainContainer').on('click', 'div.folderTitle', function(e) {
-			if (mode != 'regular') { return; }
-
-			var folderContents = $(e.currentTarget).next()[0];
-			$(folderContents).toggle();
-			var folderIsVisible = (folderContents.style.display != 'none');
-			var index = 'node_' + getIdNum(folderContents.id);
-			
-			localStorage[index] = folderIsVisible;
-
-			if (!folderIsVisible) {
-				$(folderContents).sortable('destroy');
-				$(e.currentTarget).find('img')[0].src = "../media/folder_closed.gif";
-			} else {
-				makeSortable($(folderContents));
-				$(e.currentTarget).find('img')[0].src = "../media/folder_opened.gif";
+			if (mode == 'regular') {
+				toggleOpenFolder(getIdNum(e.currentTarget.id))
 			}
 		});
 
@@ -274,7 +298,11 @@ $(function() {
 		// action on "edit title"
 		$('#menu_edit_title').on('click', function(e) {
 			editingId = targetId;
+			
+			$('.node').removeClass('selected');
 			startEditingTitle(editingId);
+			$('#menu').hide();
+			
 			return false;
 		});
 
@@ -330,7 +358,7 @@ $(function() {
             	// get the BookmarkTreeNode object for the bookmark we right-clicked on
 				chrome.bookmarks.get(targetId, function(results) {
 					targetBookmarkNode = results[0];
-
+					
 					chrome.bookmarks.create({
 						parentId: results[0].parentId,
 						index: targetBookmarkNode.index,
@@ -338,7 +366,11 @@ $(function() {
 						function(newTreeNode) {
 							newTreeNode.children = [];
 							$('#node_' + targetId).before(nodeDiv(newTreeNode));
-							$('#folderTitle_' + newTreeNode.id).trigger('click');
+							//alert($('#folderTitle_' + newTreeNode.id).isEmptyObject())
+							//alert($('#folderTitle_' + newTreeNode.id).length > 0)
+							//$('#folderTitle_' + newTreeNode.id).trigger('click');
+							//alert('3')
+							toggleOpenFolder(newTreeNode.id)
 						}
 					);
 				});
