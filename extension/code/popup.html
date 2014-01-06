@@ -3,6 +3,9 @@
 	<head>
 		<title>Cool Bookmarks</title>
 		<style>
+            html {
+            }
+
 			body {
 				background-color: #EEEEEE;
 
@@ -11,7 +14,7 @@
 
 				font-family: 'Segoe UI', Tahoma, sans-serif;
 				font-size: 73%;
-			}
+            }
 
 			input {
 				font-family: 'Segoe UI', Tahoma, sans-serif;
@@ -42,22 +45,32 @@
 				z-index: 200;
 			}
 
-			.menu {
+		    #menu div {
 				padding: 5px;
 				border: 1px white solid;
 			}
 
-			.menu:hover {
-				background-color: #F1F7FF;
-				border: 1px #B6D4FC solid;
-				cursor: pointer;
-			}
+            #menu div:hover {
+                background-color: #F1F7FF;
+                border: 1px #B6D4FC solid;
+                cursor: pointer;
+            }
 
-			div.mainContainer {
-				margin-left: 0;
-			}
+            #searchMenu {
+                display: none;
+            }
 
-			.folderContents {
+            div.mainDisplay {
+                margin-left: 0;
+                top: 2em;
+                position: relative
+            }
+
+            div#searchResults {
+                display: none;
+            }
+
+            .folderContents {
 				margin-left: 25px;
 				min-height: 1.5em;
 				display: none;
@@ -145,6 +158,14 @@
 				display: block;
 			}
 
+            #searchBox {
+                width: 410px;
+                position: fixed;
+                top: -2px;
+                left: 0;
+                z-index: 100;
+            }
+
 			/* css for the dialog menu */
 			label, input { display:block; }
 	        input.text { margin-bottom:12px; width:95%; padding: .4em; }
@@ -175,6 +196,10 @@
 			<div id="menu_delete" class="menu">Delete</div>
 			<div id="menu_edit_title" class="menu">Edit title...</div>
 		</div>
+        <div id="searchMenu">
+            <div id="searchMenu_delete" class="menu">Delete</div>
+            <div id="searchMenu_edit_title" class="menu">Edit title...</div>
+        </div>
 		
 		<div id="dialogCreateFolder" title="Create new folder">
 		    <form>
@@ -187,7 +212,8 @@
 
 		<input id="inputEdit" name="inputEdit" type="text" size="50"/>
 		
-		<div class="mainContainer folderContents" style="display: block">
-		</div>
+		<input id="searchBox" size="50" autofocus placeholder="Search bookmarks..."/>
+		<div class="mainContainer folderContents mainDisplay" style="display: block"></div>
+        <div id="searchResults" class="mainDisplay"></div>
 	</body>
 </html>
